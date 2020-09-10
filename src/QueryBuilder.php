@@ -86,7 +86,7 @@ class QueryBuilder extends Builder
      */
     public function whereAncestorOf($id, $andSelf = false, $boolean = 'and')
     {
-        $keyName = $this->model->getKeyName();
+        $keyName = $this->model->getTable() . '.' . $this->model->getKeyName();
 
         if (NestedSet::isNode($id)) {
             $value = '?';
@@ -100,7 +100,7 @@ class QueryBuilder extends Builder
                 ->toBase()
                 ->select("_.".$this->model->getRgtName())
                 ->from($this->model->getTable().' as _')
-                ->where($keyName, '=', $id)
+                ->where($this->model->getKeyName(), '=', $id)
                 ->limit(1);
 
             $this->query->mergeBindings($valueQuery);
@@ -108,13 +108,14 @@ class QueryBuilder extends Builder
             $value = '('.$valueQuery->toSql().')';
         }
 
-        $this->query->whereNested(function ($inner) use ($value, $andSelf, $id) {
+        $this->query->whereNested(function ($inner) use ($value, $andSelf, $id, $keyName) {
             list($lft, $rgt) = $this->wrappedColumns();
+            $wrappedTable = $this->query->getGrammar()->wrapTable($this->model->getTable());
 
-            $inner->whereRaw("{$value} between {$lft} and {$rgt}");
+            $inner->whereRaw("{$value} between {$wrappedTable}.{$lft} and {$wrappedTable}.{$rgt}");
 
             if ( ! $andSelf) {
-                $inner->where($this->model->getKeyName(), '<>', $id);
+                $inner->where($keyName, '<>', $id);
             }
         }, $boolean);
 
@@ -182,7 +183,7 @@ class QueryBuilder extends Builder
      */
     public function whereNodeBetween($values, $boolean = 'and', $not = false)
     {
-        $this->query->whereBetween($this->model->getLftName(), $values, $boolean, $not);
+        $this->query->whereBetween($this->model->getTable() . '.' . $this->model->getLftName(), $values, $boolean, $not);
 
         return $this;
     }
@@ -715,19 +716,19 @@ class QueryBuilder extends Builder
     protected function getDuplicatesQuery()
     {
         $table = $this->wrappedTable();
+        $keyName = $this->wrappedKey();
 
         $firstAlias = 'c1';
         $secondAlias = 'c2';
 
         $waFirst = $this->query->getGrammar()->wrapTable($firstAlias);
         $waSecond = $this->query->getGrammar()->wrapTable($secondAlias);
-        $pk = $this->model->getKeyName();
 
         $query = $this->model
             ->newNestedSetQuery($firstAlias)
             ->toBase()
             ->from($this->query->raw("{$table} as {$waFirst}, {$table} {$waSecond}"))
-            ->whereRaw("{$waFirst}.{$pk} < {$waSecond}.{$pk}")
+            ->whereRaw("{$waFirst}.{$keyName} < {$waSecond}.{$keyName}")
             ->whereNested(function (BaseQueryBuilder $inner) use ($waFirst, $waSecond) {
                 list($lft, $rgt) = $this->wrappedColumns();
 

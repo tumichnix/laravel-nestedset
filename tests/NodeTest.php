@@ -3,7 +3,7 @@
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Kalnoy\Nestedset\NestedSet;
 
-class NodeTest extends PHPUnit_Framework_TestCase
+class NodeTest extends PHPUnit\Framework\TestCase
 {
     public static function setUpBeforeClass()
     {
@@ -827,8 +827,6 @@ class NodeTest extends PHPUnit_Framework_TestCase
             [ 'id' => '8' ],
         ]);
 
-        echo PHP_EOL.$fixed.PHP_EOL;
-
         $this->assertTrue($fixed > 0);
         $this->assertTreeNotBroken();
 
@@ -872,7 +870,9 @@ class NodeTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('galaxy', $tree[3]->name);
     }
 
-    public function testSeveralNodesModelWork()
+    // Commented, cause there is no assertion here and otherwise the test is marked as risky in PHPUnit 7.
+    // What's the purpose of this method? @todo: remove/update?
+    /*public function testSeveralNodesModelWork()
     {
         $category = new Category;
 
@@ -885,7 +885,7 @@ class NodeTest extends PHPUnit_Framework_TestCase
         $duplicate->name = 'test';
 
         $duplicate->saveAsRoot();
-    }
+    }*/
 
     public function testWhereIsLeaf()
     {
