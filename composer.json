@@ -32,9 +32,6 @@
     "prefer-stable": true,
 
     "extra": {
-        "branch-alias": {
-            "dev-master": "v5"
-        },
 
         "laravel": {
             "providers": [
